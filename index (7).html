@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unity Basics Test</title>
+<style>
+  :root {
+    --bg: #F5F7FA; --card: #FFFFFF; --text: #1B2430; --muted: #5A6472; --line: #D9DEE5;
+    --accent: #1F4E79; --accent-soft: #EAF1F8;
+    --ok: #1E7B45; --ok-soft: #E3F4EA; --bad: #B3261E; --bad-soft: #FBE7E6;
+    --warn: #8A5A00; --warn-soft: #FFF4D6;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 17px; line-height: 1.45;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 16px; }
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0 14px; }
+  header.top h1 { font-size: 18px; margin: 0; color: var(--accent); letter-spacing: .2px; }
+  .net { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); display: none; }
+  .net.show { display: inline-block; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px; box-shadow: 0 1px 2px rgba(20, 33, 61, .05); }
+  h2 { font-size: 24px; line-height: 1.25; margin: 0 0 6px; }
+  .sub { color: var(--muted); margin: 0 0 18px; font-size: 15px; }
+  ul.rules { margin: 0 0 20px; padding-left: 20px; }
+  ul.rules li { margin: 4px 0; }
+  label { display: block; font-weight: 600; margin: 14px 0 6px; font-size: 15px; }
+  input[type=text] {
+    width: 100%; font: inherit; padding: 13px 14px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; color: var(--text);
+  }
+  input[type=text]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .field-error { color: var(--bad); font-size: 14px; min-height: 20px; margin-top: 4px; }
+  button { font: inherit; cursor: pointer; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; margin-top: 18px; padding: 15px 18px; border: 0; border-radius: 12px;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 17px;
+  }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .btn.secondary { background: #fff; color: var(--accent); border: 1.5px solid var(--accent); }
+  .msg { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-size: 15px; display: none; }
+  .msg.show { display: block; }
+  .msg.err { background: var(--bad-soft); color: var(--bad); }
+  .msg.info { background: var(--accent-soft); color: var(--accent); }
+
+  .countdown { text-align: center; padding: 40px 10px; }
+  .countdown .big { font-size: 88px; font-weight: 800; color: var(--accent); line-height: 1; margin: 12px 0; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; text-align: center; }
+  .stat .k { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+  .stat .v { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stat.timer .v { color: var(--accent); }
+  .stat.timer.low { border-color: var(--bad); background: var(--bad-soft); }
+  .stat.timer.low .v { color: var(--bad); }
+  .bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin-bottom: 6px; }
+  .bar > div { height: 100%; background: var(--accent); width: 100%; transition: width .2s linear; }
+  .bar.time > div { background: var(--accent); }
+  .bar.time.low > div { background: var(--bad); }
+  .bar.progress > div { background: #7A8FA6; }
+  .bars { margin-bottom: 14px; }
+  .qnum { font-size: 14px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+  .qtext { font-size: 20px; font-weight: 600; line-height: 1.35; margin: 0 0 14px; }
+  pre.code {
+    background: #14213D; color: #E8EEF5; border-radius: 10px; padding: 14px; overflow-x: auto;
+    font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 0 0 14px; white-space: pre;
+  }
+  .options { display: grid; gap: 10px; }
+  .opt {
+    display: flex; align-items: flex-start; gap: 12px; text-align: left; width: 100%;
+    padding: 13px 14px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; color: var(--text);
+    min-height: 54px; transition: border-color .15s, background .15s;
+  }
+  @media (hover: hover) {
+    .opt:not(:disabled):hover { border-color: var(--accent); background: var(--accent-soft); }
+  }
+  .opt:disabled { cursor: default; }
+  .opt .letter {
+    flex: 0 0 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    background: var(--accent-soft); color: var(--accent); font-weight: 800;
+  }
+  .opt .t { padding-top: 4px; }
+  .opt.dim { opacity: .5; }
+  .opt.pending { border-color: var(--accent); background: var(--accent-soft); }
+  .opt.correct { border-color: var(--ok); background: var(--ok-soft); opacity: 1; }
+  .opt.correct .letter { background: var(--ok); color: #fff; }
+  .opt.incorrect { border-color: var(--bad); background: var(--bad-soft); opacity: 1; }
+  .opt.incorrect .letter { background: var(--bad); color: #fff; }
+  .feedback { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-weight: 700; display: none; }
+  .feedback.show { display: block; }
+  .feedback.ok { background: var(--ok-soft); color: var(--ok); }
+  .feedback.bad { background: var(--bad-soft); color: var(--bad); }
+  .feedback.neutral { background: var(--accent-soft); color: var(--accent); }
+  .feedback.warn { background: var(--warn-soft); color: var(--warn); }
+
+  .done-badge { display: inline-block; background: var(--ok-soft); color: var(--ok); font-weight: 800; padding: 6px 12px; border-radius: 999px; margin-bottom: 10px; }
+  .score-big { font-size: 56px; font-weight: 800; color: var(--accent); line-height: 1; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
+  table.res { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 16px; }
+  table.res td { padding: 10px 4px; border-bottom: 1px solid var(--line); }
+  table.res td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .save-state { margin-top: 16px; padding: 12px 14px; border-radius: 10px; font-size: 15px; }
+  .save-state.saving { background: var(--accent-soft); color: var(--accent); }
+  .save-state.saved { background: var(--ok-soft); color: var(--ok); font-weight: 700; }
+  .save-state.failed { background: var(--bad-soft); color: var(--bad); }
+  .hidden { display: none !important; }
+  @media (max-width: 480px) {
+    .wrap { padding: 10px; }
+    .card { padding: 16px; border-radius: 12px; }
+    h2 { font-size: 21px; }
+    .qtext { font-size: 18px; }
+    .stat .v { font-size: 20px; }
+    pre.code { font-size: 12.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Unity Basics Test</h1>
+    <span class="net" id="net" role="status">Offline — retrying…</span>
+  </header>
+
+  <!-- 1. Start screen -->
+  <section class="card" id="screen-start">
+    <h2>Materials, Lighting &amp; UI in Unity</h2>
+    <p class="sub">Knowledge check for the lecture “Materials, Lighting, and Rendering Basics + User Interface (UI) Fundamentals in Unity”.</p>
+    <ul class="rules">
+      <li>There are 20 questions.</li>
+      <li>Each question is worth 5 points.</li>
+      <li>You have 20 seconds to answer each question.</li>
+      <li>The maximum score is 100 points.</li>
+      <li>If you do not answer within 20 seconds, the question is marked as unanswered and the test automatically proceeds to the next question.</li>
+      <li>You cannot change an answer after you choose it.</li>
+    </ul>
+    <form id="start-form" novalidate>
+      <label for="full-name">Full Name</label>
+      <input type="text" id="full-name" autocomplete="name" maxlength="80" required>
+      <div class="field-error" id="err-name"></div>
+      <label for="group">Group</label>
+      <input type="text" id="group" autocomplete="off" maxlength="40" required>
+      <div class="field-error" id="err-group"></div>
+      <button class="btn" type="submit" id="start-btn">Start Test</button>
+    </form>
+    <div class="msg err" id="start-msg" role="alert"></div>
+  </section>
+
+  <!-- 2. Countdown -->
+  <section class="card countdown hidden" id="screen-countdown">
+    <div class="sub">The test starts in</div>
+    <div class="big" id="countdown-num">3</div>
+    <div class="sub">Get ready: 20 seconds per question.</div>
+  </section>
+
+  <!-- 3. Question -->
+  <section class="hidden" id="screen-question">
+    <div class="stats">
+      <div class="stat timer" id="timer-box"><div class="k">Time left</div><div class="v" id="timer">20</div></div>
+      <div class="stat"><div class="k">Progress</div><div class="v" id="progress">0/20</div></div>
+      <div class="stat"><div class="k">Score</div><div class="v" id="score">0</div></div>
+    </div>
+    <div class="bars">
+      <div class="bar time" id="time-bar"><div id="time-fill"></div></div>
+      <div class="bar progress"><div id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="card">
+      <div class="qnum" id="qnum">Question 1 of 20</div>
+      <p class="qtext" id="qtext"></p>
+      <pre class="code hidden" id="qcode"></pre>
+      <div class="options" id="options" role="group" aria-label="Answer options"></div>
+      <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- 4. Result -->
+  <section class="card hidden" id="screen-result">
+    <span class="done-badge">Test Completed</span>
+    <h2 id="res-name"></h2>
+    <p class="sub" id="res-group"></p>
+    <div class="score-big"><span id="res-score">0</span><span style="font-size:24px;color:var(--muted)"> / 100</span></div>
+    <table class="res">
+      <tr><td>Full Name</td><td id="r-name"></td></tr>
+      <tr><td>Group</td><td id="r-group"></td></tr>
+      <tr><td>Number of correct answers</td><td id="r-correct"></td></tr>
+      <tr><td>Number of incorrect answers</td><td id="r-incorrect"></td></tr>
+      <tr><td>Number of unanswered questions</td><td id="r-unanswered"></td></tr>
+      <tr><td>Total score</td><td id="r-total"></td></tr>
+      <tr><td>Percentage</td><td id="r-percent"></td></tr>
+    </table>
+    <div class="save-state saving" id="save-state" role="status">Saving your result…</div>
+    <button class="btn hidden" type="button" id="retry-btn">Retry Submission</button>
+    <button class="btn secondary hidden" type="button" id="new-btn">New student on this device</button>
+  </section>
+
+  <!-- Configuration error (for the instructor) -->
+  <section class="card hidden" id="screen-config">
+    <h2>The test is not configured yet</h2>
+    <p class="sub">Instructor: open index.html and paste the Google Apps Script Web App URL into <code>API_URL</code>. See README.md.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ===================== CONFIGURATION =====================
+  // Paste the Web App URL from Apps Script (Deploy → Manage deployments). It ends with /exec.
+  // This URL is not a secret: the answer key stays on the server.
+  var API_URL = 'https://script.google.com/macros/s/AKfycbxB6tt_5m57dpHtRbn6zM_9b_On7tgc-1SaHBhtKBQywMBWokEGrclLCMeUxgu_NG9uxA/exec';
+
+  var FEEDBACK_MS = 1000;        // how long the green/red feedback is shown
+  var CHECK_WAIT_MS = 7000;      // how long to wait for the server's check before moving on
+  var REQUEST_TIMEOUT_MS = 15000;
+  var STORAGE_KEY = 'unityBasicsTest.v1';
+
+  // ===================== STATE =====================
+  var S = null;            // persisted state (see newState)
+  var ticker = null;       // interval that only REDRAWS the timer; the time itself comes from S.deadline
+  var locked = false;      // true once the current question has been answered or has expired
+  var flushing = false;    // the outbox sender is running
+  var finishing = false;   // the final submission is in progress
+  var waiters = {};        // question index -> callbacks waiting for the server's check
+
+  var $ = function (id) { return document.getElementById(id); };
+  var LETTERS = ['A', 'B', 'C', 'D', 'E'];
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); } catch (e) { /* private mode: keep going */ }
+  }
+  function loadSaved() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) { return null; }
+  }
+
+  function show(screen) {
+    ['start', 'countdown', 'question', 'result', 'config'].forEach(function (s) {
+      $('screen-' + s).classList.toggle('hidden', s !== screen);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  // ===================== NETWORK =====================
+  function NetError(msg) { this.message = msg; }
+
+  /** One POST to Apps Script. The body is sent as text/plain (no CORS preflight). */
+  function api(payload) {
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, REQUEST_TIMEOUT_MS);
+    return fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      redirect: 'follow',
+      signal: ctrl ? ctrl.signal : undefined
+    }).then(function (r) {
+      if (!r.ok) throw new NetError('HTTP ' + r.status);
+      return r.json();
+    }).then(function (data) {
+      if (!data || typeof data !== 'object') throw new NetError('Bad reply');
+      if (data.ok === false && data.error === 'busy') throw new NetError('busy');
+      return data;
+    }, function (err) {
+      throw err instanceof NetError ? err : new NetError(err && err.message ? err.message : 'Network error');
+    }).finally(function () { clearTimeout(timer); });
+  }
+
+  /** Repeats a request after network errors: 1 s, 2 s, 4 s… */
+  function apiRetry(payload, attempts) {
+    var n = 0;
+    function go() {
+      return api(payload).catch(function (err) {
+        n++;
+        if (n >= attempts) throw err;
+        return wait(Math.min(1000 * Math.pow(2, n - 1), 8000)).then(go);
+      });
+    }
+    return go();
+  }
+
+  function wait(ms) { return new Promise(function (res) { setTimeout(res, ms); }); }
+
+  function setOffline(on) { $('net').classList.toggle('show', !!on); }
+
+  // ===================== OUTBOX (answers waiting for the server) =====================
+  // Every question produces exactly one outbox item, sent strictly in order. The server ignores repeats,
+  // so a retry after a lost connection never adds points twice.
+
+  function enqueue(index, choice) {
+    S.outbox.push({ index: index, choice: choice });
+    save();
+    flush();
+  }
+
+  var retryTimer = null;   // pending back-off before the next retry
+  var retryNow = null;     // runs that retry immediately (used when the connection comes back)
+
+  function flush() {
+    if (flushing) { if (retryTimer && retryNow) { clearTimeout(retryTimer); retryTimer = null; retryNow(); } return; }
+    if (!S || !S.outbox.length) return;
+    flushing = true;
+    var delay = 1000;
+    (function step() {
+      retryTimer = null;
+      if (!S.outbox.length) { flushing = false; setOffline(false); notifyIdle(); return; }
+      var item = S.outbox[0];
+      api({ action: 'answer', attemptId: S.attemptId, index: item.index, choice: item.choice })
+        .then(function (data) {
+          setOffline(false);
+          delay = 1000;
+          if (data.ok) {
+            applyServerResult(data.index, data.status, data.score);
+            S.outbox.shift();
+            save();
+            step();
+          } else if (data.error === 'out_of_order' && typeof data.expectedIndex === 'number') {
+            // The server is missing an earlier answer: send it first (unanswered if we no longer know it).
+            var prev = S.results[data.expectedIndex];
+            S.outbox.unshift({ index: data.expectedIndex, choice: prev && prev.choice ? prev.choice : null });
+            save();
+            step();
+          } else if (data.error === 'attempt_not_found') {
+            S.outbox = [];
+            save();
+            flushing = false;
+            fatal('Your test session was not found on the server. Please contact your instructor.');
+          } else {
+            // Unexpected validation error: drop this item so the rest can go through.
+            S.outbox.shift();
+            save();
+            step();
+          }
+        })
+        .catch(function () {
+          setOffline(true);
+          retryNow = step;
+          retryTimer = setTimeout(step, delay);
+          delay = Math.min(delay * 2, 8000);
+        });
+    })();
+  }
+
+  var idleCallbacks = [];
+  function notifyIdle() {
+    var cbs = idleCallbacks; idleCallbacks = [];
+    cbs.forEach(function (cb) { cb(); });
+  }
+  function whenOutboxEmpty(timeoutMs) {
+    return new Promise(function (resolve) {
+      if (!S.outbox.length) return resolve(true);
+      var done = false;
+      idleCallbacks.push(function () { if (!done) { done = true; resolve(true); } });
+      setTimeout(function () { if (!done) { done = true; resolve(false); } }, timeoutMs);
+      flush();
+    });
+  }
+
+  function applyServerResult(index, status, score) {
+    var r = S.results[index];
+    if (r) r.status = status;
+    if (typeof score === 'number') S.score = score;
+    updateScore();
+    var cbs = waiters[index];
+    if (cbs) { delete waiters[index]; cbs.forEach(function (cb) { cb(status); }); }
+  }
+
+  /** Resolves with the server's verdict for this question, or null if it takes too long. */
+  function waitForVerdict(index, ms) {
+    return new Promise(function (resolve) {
+      var r = S.results[index];
+      if (r && r.status !== 'pending') return resolve(r.status);
+      var settled = false;
+      (waiters[index] = waiters[index] || []).push(function (st) { if (!settled) { settled = true; resolve(st); } });
+      setTimeout(function () { if (!settled) { settled = true; resolve(null); } }, ms);
+    });
+  }
+
+  window.addEventListener('online', function () { flush(); });
+
+  // ===================== START =====================
+  function newState(data) {
+    return {
+      attemptId: data.attemptId, name: data.name, group: data.group,
+      questions: data.questions,
+      seconds: data.secondsPerQuestion || 20,
+      points: data.pointsPerQuestion || 5,
+      phase: 'countdown',
+      countdownEnd: Date.now() + (data.countdownSeconds || 3) * 1000,
+      index: 0,
+      deadline: null,
+      results: [],     // per question: {choice: 'A'..'E' | null, status: 'pending'|'correct'|'incorrect'|'unanswered', expired}
+      outbox: [],
+      score: 0,
+      final: null,
+      submitted: false
+    };
+  }
+
+  $('start-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var nameEl = $('full-name'), groupEl = $('group');
+    var name = nameEl.value.replace(/\s+/g, ' ').trim();
+    var group = groupEl.value.replace(/\s+/g, ' ').trim();
+    nameEl.value = name; groupEl.value = group;
+    $('err-name').textContent = name ? '' : 'Please enter your full name.';
+    $('err-group').textContent = group ? '' : 'Please enter your group.';
+    if (!name) { nameEl.focus(); return; }
+    if (!group) { groupEl.focus(); return; }
+
+    var btn = $('start-btn');
+    btn.disabled = true;
+    btn.textContent = 'Connecting…';
+    hideMsg('start-msg');
+    apiRetry({ action: 'start', name: name, group: group }, 3).then(function (data) {
+      if (!data.ok) {
+        showMsg('start-msg', data.message || 'The test could not be started.');
+        btn.disabled = false; btn.textContent = 'Start Test';
+        return;
+      }
+      S = newState(data);
+      save();
+      runCountdown();
+    }).catch(function () {
+      showMsg('start-msg', 'No connection to the server. Check your internet connection and press Start Test again.');
+      btn.disabled = false; btn.textContent = 'Start Test';
+    });
+  });
+
+  function showMsg(id, text) { var el = $(id); el.textContent = text; el.classList.add('show'); }
+  function hideMsg(id) { $(id).classList.remove('show'); }
+
+  function runCountdown() {
+    S.phase = 'countdown';
+    save();
+    show('countdown');
+    (function tick() {
+      var left = Math.ceil((S.countdownEnd - Date.now()) / 1000);
+      if (left <= 0) { S.phase = 'question'; S.deadline = null; save(); showQuestion(); return; }
+      $('countdown-num').textContent = left;
+      setTimeout(tick, 200);
+    })();
+  }
+
+  // ===================== QUESTIONS + TIMER =====================
+  function showQuestion() {
+    var i = S.index, q = S.questions[i], total = S.questions.length;
+    if (!S.deadline) { S.deadline = Date.now() + S.seconds * 1000; save(); } // a reload keeps the same deadline
+    locked = false;
+    show('question');
+
+    $('qnum').textContent = 'Question ' + (i + 1) + ' of ' + total;
+    $('qtext').textContent = q.text;
+    var code = $('qcode');
+    code.classList.toggle('hidden', !q.code);
+    code.textContent = q.code || '';
+    $('progress').textContent = (i + 1) + '/' + total;
+    $('progress-fill').style.width = ((i + 1) / total * 100) + '%';
+    var fb = $('feedback'); fb.className = 'feedback'; fb.textContent = '';
+    updateScore();
+
+    var box = $('options');
+    box.innerHTML = '';
+    q.options.forEach(function (text, k) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'opt';
+      b.setAttribute('data-letter', LETTERS[k]);
+      var l = document.createElement('span'); l.className = 'letter'; l.textContent = LETTERS[k];
+      var t = document.createElement('span'); t.className = 't'; t.textContent = text;
+      b.appendChild(l); b.appendChild(t);
+      b.addEventListener('click', function () { choose(LETTERS[k], b); });
+      box.appendChild(b);
+    });
+
+    startTicker();
+  }
+
+  function remainingMs() { return Math.max(0, S.deadline - Date.now()); }
+
+  function startTicker() {
+    stopTicker();
+    drawTimer();
+    ticker = setInterval(function () {
+      drawTimer();
+      if (remainingMs() <= 0) expire();
+    }, 200);
+  }
+  function stopTicker() { if (ticker) { clearInterval(ticker); ticker = null; } }
+
+  function drawTimer() {
+    var ms = remainingMs();
+    var secs = Math.ceil(ms / 1000);
+    $('timer').textContent = secs;
+    var low = secs <= 5;
+    $('timer-box').classList.toggle('low', low);
+    $('time-bar').classList.toggle('low', low);
+    $('time-fill').style.width = (ms / (S.seconds * 1000) * 100) + '%';
+  }
+
+  function updateScore() { $('score').textContent = S ? S.score : 0; }
+
+  function lockOptions(selectedBtn, cls) {
+    Array.prototype.forEach.call(document.querySelectorAll('#options .opt'), function (b) {
+      b.disabled = true;
+      if (b !== selectedBtn) b.classList.add('dim');
+    });
+    if (selectedBtn) selectedBtn.classList.add(cls);
+  }
+
+  function setFeedback(text, cls) {
+    var fb = $('feedback');
+    fb.textContent = text;
+    fb.className = 'feedback show ' + cls;
+  }
+
+  function choose(letter, btn) {
+    if (locked || S.phase !== 'question') return;     // already answered / expired: ignore extra clicks
+    if (remainingMs() <= 0) { expire(); return; }      // re-check the time at the moment of the click
+    locked = true;
+    stopTicker();
+    var i = S.index;
+    S.results[i] = { choice: letter, status: 'pending', expired: false };
+    lockOptions(btn, 'pending');
+    setFeedback('Checking your answer…', 'neutral');
+    enqueue(i, letter);
+    waitForVerdict(i, CHECK_WAIT_MS).then(function (status) {
+      btn.classList.remove('pending');
+      if (status === 'correct') {
+        btn.classList.add('correct');
+        setFeedback('Correct answer! +5 points', 'ok');
+      } else if (status === 'incorrect') {
+        btn.classList.add('incorrect');
+        setFeedback('Incorrect answer. 0 points', 'bad');
+      } else if (status === 'unanswered') {
+        setFeedback('Your answer reached the server too late. 0 points', 'warn');
+      } else {
+        setFeedback('Answer saved. It will be checked when your connection returns.', 'warn');
+      }
+      setTimeout(next, FEEDBACK_MS);
+    });
+  }
+
+  function expire() {
+    if (locked || S.phase !== 'question') return;
+    locked = true;
+    stopTicker();
+    $('timer').textContent = '0';
+    $('time-fill').style.width = '0%';
+    var i = S.index;
+    S.results[i] = { choice: null, status: 'unanswered', expired: true };
+    lockOptions(null);
+    setFeedback('Time expired. 0 points', 'warn');
+    enqueue(i, null);
+    setTimeout(next, FEEDBACK_MS);
+  }
+
+  function next() {
+    S.index++;
+    S.deadline = null;
+    if (S.index >= S.questions.length) {
+      S.phase = 'done';
+      save();
+      finishTest();
+    } else {
+      save();
+      showQuestion();
+    }
+  }
+
+  // ===================== FINISH + SUBMISSION =====================
+  function localSummary() {
+    var c = 0, inc = 0, un = 0, pend = 0;
+    S.results.forEach(function (r) {
+      if (!r) return;
+      if (r.status === 'correct') c++;
+      else if (r.status === 'incorrect') inc++;
+      else if (r.status === 'unanswered') un++;
+      else pend++;
+    });
+    un += S.questions.length - S.results.length;
+    return { correct: c, incorrect: inc, unanswered: un, pending: pend };
+  }
+
+  function renderResult(res, isFinal) {
+    show('result');
+    var total = Math.max(0, Math.min(100, res.totalScore));
+    $('res-name').textContent = S.name;
+    $('res-group').textContent = 'Group: ' + S.group;
+    $('res-score').textContent = total;
+    $('r-name').textContent = S.name;
+    $('r-group').textContent = S.group;
+    $('r-correct').textContent = res.correct;
+    $('r-incorrect').textContent = res.incorrect;
+    $('r-unanswered').textContent = res.unanswered;
+    $('r-total').textContent = total + ' / 100';
+    $('r-percent').textContent = (Math.round(res.percentage * 10) / 10) + '%';
+    if (!isFinal && res.pending) {
+      $('r-incorrect').textContent = res.incorrect + ' (+' + res.pending + ' being checked)';
+    }
+  }
+
+  function setSaveState(cls, text) {
+    var el = $('save-state');
+    el.className = 'save-state ' + cls;
+    el.textContent = text;
+  }
+
+  function finishTest() {
+    stopTicker();
+    window.removeEventListener('beforeunload', warnLeave);
+    if (S.submitted && S.final) {
+      renderResult(S.final, true);
+      setSaveState('saved', '✓ Your result has been saved. You can close this page.');
+      $('retry-btn').classList.add('hidden');
+      $('new-btn').classList.remove('hidden');
+      return;
+    }
+    var l = localSummary();
+    var t = l.correct * S.points;
+    renderResult({ correct: l.correct, incorrect: l.incorrect, unanswered: l.unanswered, pending: l.pending,
+      totalScore: t, percentage: t / (S.questions.length * S.points) * 100 }, false);
+    submit();
+  }
+
+  function submit() {
+    if (finishing || S.submitted) return;   // never send the same result twice from this page
+    finishing = true;
+    var retry = $('retry-btn');
+    retry.disabled = true;
+    setSaveState('saving', 'Saving your result…');
+    whenOutboxEmpty(25000).then(function (allSent) {
+      if (!allSent) throw new NetError('Answers not sent');
+      return apiRetry({ action: 'finish', attemptId: S.attemptId }, 3);
+    }).then(function (data) {
+      if (!data.ok) throw new NetError(data.message || 'Server error');
+      S.final = data.result;
+      S.submitted = true;
+      save();
+      renderResult(data.result, true);
+      setSaveState('saved', '✓ Your result has been saved. You can close this page.');
+      retry.classList.add('hidden');
+      $('new-btn').classList.remove('hidden');
+    }).catch(function () {
+      setSaveState('failed', 'Your result could not be sent. Check your internet connection and press Retry Submission. Do not close this page.');
+      retry.classList.remove('hidden');
+      retry.disabled = false;
+    }).then(function () { finishing = false; });
+  }
+
+  $('retry-btn').addEventListener('click', function () { flush(); submit(); });
+
+  // Shared computers: only after the result is safely saved, the next student can start a fresh test.
+  $('new-btn').addEventListener('click', function () {
+    if (!S || !S.submitted) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
+    location.reload();
+  });
+
+  function fatal(text) {
+    stopTicker();
+    show('start');
+    $('start-form').classList.add('hidden');
+    showMsg('start-msg', text);
+  }
+
+  function warnLeave(e) {
+    if (S && S.phase !== 'done') { e.preventDefault(); e.returnValue = ''; }
+  }
+
+  // ===================== RESUME AFTER A RELOAD =====================
+  // The deadline is stored as a timestamp, so reloading the page never gives extra seconds.
+  function resume(saved) {
+    S = saved;
+    if (S.phase === 'done') { finishTest(); return; }
+    window.addEventListener('beforeunload', warnLeave);
+    // A question that was already answered before the reload: move on to the next one.
+    if (S.results[S.index]) { S.index++; S.deadline = null; }
+    if (S.index >= S.questions.length) { S.phase = 'done'; save(); finishTest(); return; }
+    // Pending checks from before the reload are resolved by the outbox / status sync.
+    flush();
+    api({ action: 'status', attemptId: S.attemptId }).then(function (data) {
+      if (!data.ok) return;
+      if (data.finished && data.result) { S.final = data.result; S.submitted = true; S.phase = 'done'; save(); finishTest(); return; }
+      (data.recorded || []).forEach(function (st, idx) { if (S.results[idx]) S.results[idx].status = st; });
+      if (typeof data.score === 'number') { S.score = data.score; updateScore(); }
+      S.outbox = S.outbox.filter(function (it) { return it.index >= (data.recorded || []).length; });
+      save();
+    }).catch(function () { /* offline: the outbox will sync later */ });
+    if (S.phase === 'countdown') runCountdown(); else showQuestion();
+  }
+
+  // ===================== INIT =====================
+  if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(API_URL)) {
+    show('config');
+    return;
+  }
+  var saved = loadSaved();
+  if (saved && saved.attemptId && saved.questions) {
+    resume(saved);
+  } else {
+    show('start');
+    $('start-form').addEventListener('submit', function () {
+      window.addEventListener('beforeunload', warnLeave);
+    });
+  }
+})();
+</script>
+</body>
+</html>
